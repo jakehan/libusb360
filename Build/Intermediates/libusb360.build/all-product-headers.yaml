@@ -1,0 +1,33 @@
+{
+  'version': 0,
+  'case-sensitive': 'false',
+  'roots': [
+    {
+      'type': 'directory',
+      'name': "/Volumes/WorkStuff/ObjectCFactory/libusb360/Build/Products/Debug-iphoneos/libusb360.framework/Headers",
+      'contents': [
+        {
+          'type': 'file',
+          'name': "libusb360-Swift.h",
+          'external-contents': "/Volumes/WorkStuff/ObjectCFactory/libusb360/Build/Products/Debug-iphoneos/libusb360.framework/Headers/libusb360-Swift.h"
+        },
+        {
+          'type': 'file',
+          'name': "libusb360.h",
+          'external-contents': "/Volumes/WorkStuff/ObjectCFactory/libusb360/libusb360/libusb360.h"
+        }
+      ]
+    },
+    {
+      'type': 'directory',
+      'name': "/Volumes/WorkStuff/ObjectCFactory/libusb360/Build/Products/Debug-iphoneos/libusb360.framework/Modules",
+      'contents': [
+        {
+          'type': 'file',
+          'name': "module.modulemap",
+          'external-contents': "/Volumes/WorkStuff/ObjectCFactory/libusb360/Build/Intermediates/libusb360.build/Debug-iphoneos/libusb360.build/module.modulemap"
+        }
+      ]
+    }
+  ]
+}

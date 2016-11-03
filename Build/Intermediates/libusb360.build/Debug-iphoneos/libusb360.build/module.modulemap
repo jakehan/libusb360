@@ -1,0 +1,6 @@
+framework module libusb360 {
+  umbrella header "libusb360.h"
+
+  export *
+  module * { export * }
+}
