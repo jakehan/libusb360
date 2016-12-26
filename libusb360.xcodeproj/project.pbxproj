@@ -7,13 +7,35 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5DC82EAF1DF7A9E200D34ADA /* libusb360.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DC82EA91DF7A9E200D34ADA /* libusb360.a */; };
+		5DC82EB01DF7A9E200D34ADA /* usb360.h in Headers */ = {isa = PBXBuildFile; fileRef = 5DC82EAA1DF7A9E200D34ADA /* usb360.h */; };
+		5DC82EB11DF7A9E200D34ADA /* usb360_api.h in Headers */ = {isa = PBXBuildFile; fileRef = 5DC82EAB1DF7A9E200D34ADA /* usb360_api.h */; };
+		5DC82EB21DF7A9E200D34ADA /* usb360_cmd_sdk.h in Headers */ = {isa = PBXBuildFile; fileRef = 5DC82EAC1DF7A9E200D34ADA /* usb360_cmd_sdk.h */; };
+		5DC82EB31DF7A9E200D34ADA /* usb360_cmd_usr.h in Headers */ = {isa = PBXBuildFile; fileRef = 5DC82EAD1DF7A9E200D34ADA /* usb360_cmd_usr.h */; };
+		5DC82EB41DF7A9E200D34ADA /* usb360_errcode.h in Headers */ = {isa = PBXBuildFile; fileRef = 5DC82EAE1DF7A9E200D34ADA /* usb360_errcode.h */; };
 		5DF250961DCB019200EFDC44 /* libusb360.h in Headers */ = {isa = PBXBuildFile; fileRef = 5DF250941DCB019200EFDC44 /* libusb360.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		5DF2509E1DCB0EE700EFDC44 /* USB360Manager.h in Headers */ = {isa = PBXBuildFile; fileRef = 5DF2509C1DCB0EE700EFDC44 /* USB360Manager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		5DF2509F1DCB0EE700EFDC44 /* USB360Manager.m in Sources */ = {isa = PBXBuildFile; fileRef = 5DF2509D1DCB0EE700EFDC44 /* USB360Manager.m */; };
+		5DF25F271DD04B1700439915 /* ExternalAccessory.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DF25F261DD04B1700439915 /* ExternalAccessory.framework */; };
+		5DF25F2A1DD050B600439915 /* EADSessionController.h in Headers */ = {isa = PBXBuildFile; fileRef = 5DF25F281DD050B600439915 /* EADSessionController.h */; };
+		5DF25F2B1DD050B600439915 /* EADSessionController.m in Sources */ = {isa = PBXBuildFile; fileRef = 5DF25F291DD050B600439915 /* EADSessionController.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		5DC82EA91DF7A9E200D34ADA /* libusb360.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libusb360.a; sourceTree = "<group>"; };
+		5DC82EAA1DF7A9E200D34ADA /* usb360.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = usb360.h; sourceTree = "<group>"; };
+		5DC82EAB1DF7A9E200D34ADA /* usb360_api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = usb360_api.h; sourceTree = "<group>"; };
+		5DC82EAC1DF7A9E200D34ADA /* usb360_cmd_sdk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = usb360_cmd_sdk.h; sourceTree = "<group>"; };
+		5DC82EAD1DF7A9E200D34ADA /* usb360_cmd_usr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = usb360_cmd_usr.h; sourceTree = "<group>"; };
+		5DC82EAE1DF7A9E200D34ADA /* usb360_errcode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = usb360_errcode.h; sourceTree = "<group>"; };
 		5DF250911DCB019200EFDC44 /* libusb360.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = libusb360.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		5DF250941DCB019200EFDC44 /* libusb360.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = libusb360.h; sourceTree = "<group>"; };
 		5DF250951DCB019200EFDC44 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		5DF2509C1DCB0EE700EFDC44 /* USB360Manager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = USB360Manager.h; sourceTree = "<group>"; };
+		5DF2509D1DCB0EE700EFDC44 /* USB360Manager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = USB360Manager.m; sourceTree = "<group>"; };
+		5DF25F261DD04B1700439915 /* ExternalAccessory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExternalAccessory.framework; path = System/Library/Frameworks/ExternalAccessory.framework; sourceTree = SDKROOT; };
+		5DF25F281DD050B600439915 /* EADSessionController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EADSessionController.h; sourceTree = "<group>"; };
+		5DF25F291DD050B600439915 /* EADSessionController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EADSessionController.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -21,17 +43,33 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5DC82EAF1DF7A9E200D34ADA /* libusb360.a in Frameworks */,
+				5DF25F271DD04B1700439915 /* ExternalAccessory.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		5DC82EA81DF7A9E200D34ADA /* USB360SDK */ = {
+			isa = PBXGroup;
+			children = (
+				5DC82EA91DF7A9E200D34ADA /* libusb360.a */,
+				5DC82EAA1DF7A9E200D34ADA /* usb360.h */,
+				5DC82EAB1DF7A9E200D34ADA /* usb360_api.h */,
+				5DC82EAC1DF7A9E200D34ADA /* usb360_cmd_sdk.h */,
+				5DC82EAD1DF7A9E200D34ADA /* usb360_cmd_usr.h */,
+				5DC82EAE1DF7A9E200D34ADA /* usb360_errcode.h */,
+			);
+			path = USB360SDK;
+			sourceTree = "<group>";
+		};
 		5DF250871DCB019200EFDC44 = {
 			isa = PBXGroup;
 			children = (
 				5DF250931DCB019200EFDC44 /* libusb360 */,
 				5DF250921DCB019200EFDC44 /* Products */,
+				5DF25F251DD04B1600439915 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -46,10 +84,23 @@
 		5DF250931DCB019200EFDC44 /* libusb360 */ = {
 			isa = PBXGroup;
 			children = (
+				5DC82EA81DF7A9E200D34ADA /* USB360SDK */,
+				5DF25F281DD050B600439915 /* EADSessionController.h */,
+				5DF25F291DD050B600439915 /* EADSessionController.m */,
 				5DF250941DCB019200EFDC44 /* libusb360.h */,
 				5DF250951DCB019200EFDC44 /* Info.plist */,
+				5DF2509C1DCB0EE700EFDC44 /* USB360Manager.h */,
+				5DF2509D1DCB0EE700EFDC44 /* USB360Manager.m */,
 			);
 			path = libusb360;
+			sourceTree = "<group>";
+		};
+		5DF25F251DD04B1600439915 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				5DF25F261DD04B1700439915 /* ExternalAccessory.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -59,7 +110,14 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5DC82EB31DF7A9E200D34ADA /* usb360_cmd_usr.h in Headers */,
+				5DF25F2A1DD050B600439915 /* EADSessionController.h in Headers */,
+				5DC82EB21DF7A9E200D34ADA /* usb360_cmd_sdk.h in Headers */,
+				5DC82EB01DF7A9E200D34ADA /* usb360.h in Headers */,
+				5DC82EB41DF7A9E200D34ADA /* usb360_errcode.h in Headers */,
+				5DF2509E1DCB0EE700EFDC44 /* USB360Manager.h in Headers */,
 				5DF250961DCB019200EFDC44 /* libusb360.h in Headers */,
+				5DC82EB11DF7A9E200D34ADA /* usb360_api.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -132,6 +190,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5DF2509F1DCB0EE700EFDC44 /* USB360Manager.m in Sources */,
+				5DF25F2B1DD050B600439915 /* EADSessionController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -243,9 +303,16 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				HEADER_SEARCH_PATHS = /Volumes/WorkStuff/ObjectCFactory/libusb360/libusb360/USB360SDK;
 				INFOPLIST_FILE = libusb360/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/libusb360/USB360SDK",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = company.com.ynapmoc.libusb360;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -261,9 +328,16 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				HEADER_SEARCH_PATHS = /Volumes/WorkStuff/ObjectCFactory/libusb360/libusb360/USB360SDK;
 				INFOPLIST_FILE = libusb360/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/libusb360/USB360SDK",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = company.com.ynapmoc.libusb360;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -289,6 +363,7 @@
 				5DF2509B1DCB019200EFDC44 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
