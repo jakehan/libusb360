@@ -14,6 +14,11 @@ NSString *const USB360EAAccessoryKey = @"USB360EAAccessoryKey"; // EAAccessory
 NSString *const USB360EAAccessorySelectedKey = @"USB360EAAccessorySelectedKey"; // EAAccessory
 
 typedef enum {
+    USB360ErrorCodeNoInitUSBHander = 1,
+    USB360ErrorCodeUnknown = 2
+}USB360ErrorCodeType;
+
+typedef enum {
     ExposureShutterSpeedMode = 0,
     ExposureISOMode = 1,
     ExposureEvbiasMode
@@ -40,8 +45,13 @@ typedef enum {
 @property (nonatomic,retain) id delegate;
 
 + (USB360Manager *)sharedManager;
+- (void)initEASession;
+- (void)initUSB360Handler;
+- (int)destroyUSB360;
 
+//device name=Dev-Hero;SN number=1234567890;FW number=Apollo_V0.0.00.003
 -(NSString*)requestDeviceInfo;
+
 -(NSString*)requestStreamInfo;
 -(NSString*)getLensParam;
 -(int)setLensParam:(NSString *)aLen;

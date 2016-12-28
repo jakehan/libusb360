@@ -17,6 +17,8 @@
 
 NSString *EADSessionDataReceivedNotification = @"EADSessionDataReceivedNotification";
 
+#define EAD_INPUT_BUFFER_SIZE 1024
+
 @implementation EADSessionController
 
 #pragma mark Internal
@@ -42,8 +44,8 @@ NSString *EADSessionDataReceivedNotification = @"EADSessionDataReceivedNotificat
 
 // low level read method - read data while there is data and space available in the input buffer
 - (void)_readData {
-#define EAD_INPUT_BUFFER_SIZE 128
-//#define EAD_INPUT_BUFFER_SIZE (18 * 1024)
+//#define EAD_INPUT_BUFFER_SIZE 128
+//#define EAD_INPUT_BUFFER_SIZE (20 * 1024)
 
     uint8_t buf[EAD_INPUT_BUFFER_SIZE];
     while ([[_session inputStream] hasBytesAvailable])
@@ -69,60 +71,56 @@ NSString *EADSessionDataReceivedNotification = @"EADSessionDataReceivedNotificat
     {
         if ([[_session inputStream] hasBytesAvailable])
         {
-            NSInteger bytesRead = [[_session inputStream] read:(pucBuffer + iOffset) maxLength:aLen];
+            NSLog(@"offset: %d readLen: %d", iOffset,aLen);
+
+            int maxLen = EAD_INPUT_BUFFER_SIZE;
+            
+            if (aLen < EAD_INPUT_BUFFER_SIZE)
+            {
+                maxLen = aLen;
+            }
+            NSInteger bytesRead = [[_session inputStream] read:(pucBuffer + iOffset) maxLength:maxLen];
             
             iOffset += bytesRead;
             
             if (iOffset == aLen)
             {
                 NSData *data = [NSData dataWithBytes:pucBuffer length:aLen];
-                NSLog(@"bytes in hex: %@", [data description]);
-                
-                NSString *sendString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-
-                if (NULL == sendString) {
-                    sendString = [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding];
-                    
-                    if(NULL != sendString)
-                    {
-                        int dec = [sendString intValue];
-                        NSLog(@"HEX = %X", dec);
-                    }
-                    else
-                    {
-                        NSLog(@"Convert NSData To NSString Fail\n");
-                    }
-                }
-                
-                NSLog(@"data received %@",sendString);
+                NSLog(@"bytes read finished\n");
+                NSLog(@"bytes length: %d,buffers %@", aLen,data);
+//                NSLog(@"bytes in hex: %@", [data description]);
+//                
+//                NSString *sendString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+//
+//                if (NULL == sendString) {
+//                    sendString = [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding];
+//                    
+//                    if(NULL == sendString)
+//                    {
+//                        NSLog(@"Convert NSData To NSString Fail\n");
+//                    }
+//                }
+//                
+//                NSLog(@"data received %@",sendString);
 
                 break;
             }
         }
         else
         {
-            sleep(10);
+            sleep(0.3);
         }
         
         int iEndTime = [[NSDate date] timeIntervalSinceDate:iStartTime];
+        iEndTime *= 1000;
+        
         if (iEndTime > iTimeoutMs)
         {
+            NSLog(@"read data timeout\n");
             iOffset = -2;
             break;
         }
     }
-//    while ([[_session inputStream] hasBytesAvailable])
-//    {
-//        NSInteger bytesRead = [[_session inputStream] read:(pucBuffer + iOffset) maxLength:aLen];
-//        
-//        iOffset += bytesRead;
-//        
-//        if (iOffset == aLen)
-//        {
-//            break;
-//        }
-//        NSLog(@"read %ld bytes from input stream", (long)bytesRead);
-//    }
     
     return iOffset;
 }
@@ -138,6 +136,8 @@ NSString *EADSessionDataReceivedNotification = @"EADSessionDataReceivedNotificat
         {
             NSInteger bytesWritten = [[_session outputStream] write:(pucBuffer + iOffset) maxLength:aLen];
             
+            NSLog(@"bytesWritten %ld iOffset %d",(long)bytesWritten,iOffset);
+
             if (bytesWritten == -1)
             {
                 NSLog(@"write error");
@@ -148,33 +148,27 @@ NSString *EADSessionDataReceivedNotification = @"EADSessionDataReceivedNotificat
                 iOffset += bytesWritten;
             }
         }
+        else if (iOffset == aLen)
+        {
+            NSLog(@"iOffset >= aLen %d iOffset %d",aLen,iOffset);
+
+            break;
+        }
         else
         {
-            sleep(10);
+            sleep(0.3);
         }
         
         int iEndTime = [[NSDate date] timeIntervalSinceDate:iStartTime];
+        iEndTime *= 1000;
         if (iEndTime > iTimeoutMs)
         {
+            NSLog(@"iTimeoutMs %d iOffset %d",iEndTime,iOffset);
+
             iOffset = -2;
             break;
         }
     }
-    
-//    while (([[_session outputStream] hasSpaceAvailable]) && (iOffset < aLen))
-//    {
-//        NSInteger bytesWritten = [[_session outputStream] write:(pucBuffer + iOffset) maxLength:aLen];
-//        
-//        if (bytesWritten == -1)
-//        {
-//            NSLog(@"write error");
-//            break;
-//        }
-//        else if (bytesWritten > 0)
-//        {
-//            iOffset += bytesWritten;
-//        }
-//    }
     
     return iOffset;
 }
@@ -298,11 +292,11 @@ NSString *EADSessionDataReceivedNotification = @"EADSessionDataReceivedNotificat
             break;
         case NSStreamEventHasBytesAvailable:
             NSLog(@"NSStreamEventHasBytesAvailable");
-            [self _readData];
+//            [self _readData];
             break;
         case NSStreamEventHasSpaceAvailable:
             NSLog(@"NSStreamEventHasSpaceAvailable");
-            [self _writeData];
+//            [self _writeData];
             break;
         case NSStreamEventErrorOccurred:
             NSLog(@"NSStreamEventErrorOccurred");

@@ -39,13 +39,13 @@ static NSThread *listenerThread;
 
 + (USB360Manager *)sharedManager
 {
-    NSLog(@"%@",NSStringFromSelector(_cmd));
     static USB360Manager *sessionManager = nil;
     if (sessionManager == nil) {
+        NSLog(@"%@",NSStringFromSelector(_cmd));
         NSLog(@"Init Once\n");
         sessionManager = [[USB360Manager alloc] init];
 
-        [sessionManager initEASession];
+        [sessionManager addObserverForAccessory];
         
         //注册读取、发送数据回调函数
 //        usb360_api_addReceiveEndPoint(void *pvusb, void* point, int (*receive)(void *pOint, unsigned char **pucBuffer, int iLen, int iTimeOut) )
@@ -56,13 +56,16 @@ static NSThread *listenerThread;
     return sessionManager;
 }
 
-- (void)initEASession
+- (void)addObserverForAccessory
 {
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_accessoryDidConnect:) name:EAAccessoryDidConnectNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_accessoryDidDisconnect:) name:EAAccessoryDidDisconnectNotification object:nil];
     
     [[EAAccessoryManager sharedAccessoryManager] registerForLocalNotifications];
-    
+}
+
+- (void)initEASession
+{
     _eaSessionController = [EADSessionController sharedController];
     _accessoryList = [[NSMutableArray alloc] initWithArray:[[EAAccessoryManager sharedAccessoryManager] connectedAccessories]];
     NSLog(@"accessoryList %@",_accessoryList);
@@ -71,16 +74,20 @@ static NSThread *listenerThread;
         NSLog(@"Not Get Accessory List %@",_accessoryList);
     } else {
         NSLog(@"Get Accessory List %@",_accessoryList);
+        self.selectedAccessory = [_accessoryList objectAtIndex:0];
     }
     
     NSBundle *mainBundle = [NSBundle mainBundle];
     self.supportedProtocolsStrings = [mainBundle objectForInfoDictionaryKey:@"UISupportedExternalAccessoryProtocols"];
+    
+    [self initSelectedAccessoryProtocol];
 }
 
 - (void)initSelectedAccessoryProtocol
 {
     NSArray *protocolStrings = [_selectedAccessory protocolStrings];
-    
+    NSLog(@"selectedAccessory protocolStrings %@ %@", protocolStrings,self.supportedProtocolsStrings);
+
     for(NSString *protocolString in protocolStrings)
     {
         if (_selectedAccessory)
@@ -91,7 +98,8 @@ static NSThread *listenerThread;
                 if ([item compare: protocolString] == NSOrderedSame)
                 {
                     matchFound = TRUE;
-                    NSLog(@"match found - protocolString %@", protocolString);
+//                    NSLog(@"match found - protocolString %@", protocolString);
+//                    [_eaSessionController setupControllerForAccessory:_selectedAccessory withProtocolString:item];
                     break;
                 }
             }
@@ -107,6 +115,7 @@ static NSThread *listenerThread;
                                                withProtocolString:protocolString];
                 
                 NSLog(@"Found Match Protocol String  %@\n", protocolString);
+                [_eaSessionController openSession];
             }
         }
         
@@ -117,7 +126,23 @@ static NSThread *listenerThread;
 
 - (void)initUSB360Handler
 {
-    usbHandler = usb360_api_new();
+    if (usbHandler == nil) {
+        usbHandler = usb360_api_new();
+        int returnValue = [self addSendPoint];
+        if (returnValue != 0) {
+            NSLog(@"usb360_api_addSendEndPoint Error %d",returnValue);
+        }
+        
+        returnValue = [self addReceivePoint];
+        if (returnValue != 0) {
+            NSLog(@"usb360_api_addReceiveEndPoint Error %d",returnValue);
+        }
+        
+        returnValue = usb360_api_setStreamCallBack(usbHandler,streamCallBackUSB360,nil);
+        if (returnValue != 0) {
+            NSLog(@"usb360_api_setStreamCallBack Error %d",returnValue);
+        }
+    }
 }
 
 //- (int)sendCMDUSB360:(int)cmd content:(NSString *)cmdContent length:(int)cmdLen callback:(int*)callbackFunc parameter:(void*)param
@@ -129,7 +154,15 @@ static NSThread *listenerThread;
 
 - (int)destroyUSB360
 {
-    return usb360_api_destroy(usbHandler);
+    NSLog(@"%@",NSStringFromSelector(_cmd));
+    
+    if (nil == usbHandler) {
+        NSLog(@"usbHandler already released\n");
+    }
+    int iRet = usb360_api_destroy(usbHandler);
+    NSLog(@"iRet %d\n",iRet);
+
+    return iRet;
 }
 
 - (void)_accessoryDidConnect:(NSNotification *)notification {
@@ -139,7 +172,7 @@ static NSThread *listenerThread;
     NSLog(@"name %@,manufacturer %@",[connectedAccessory name],[connectedAccessory manufacturer]);
     
     NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
-    NSDictionary *userInfo = @{ USB360EAAccessoryKey: [[notification userInfo] objectForKey:EAAccessoryKey], USB360EAAccessorySelectedKey: [[notification userInfo] objectForKey:EAAccessorySelectedKey]};
+    NSDictionary *userInfo = @{ USB360EAAccessoryKey: ((nil == [[notification userInfo] objectForKey:EAAccessoryKey]) ? @"USB360EAAccessoryKey" :[[notification userInfo] objectForKey:EAAccessoryKey]), USB360EAAccessorySelectedKey: ((nil == [[notification userInfo] objectForKey:EAAccessorySelectedKey])?@"EAAccessorySelectedKey":[[notification userInfo] objectForKey:EAAccessorySelectedKey])};
     [notificationCenter postNotificationName:USB360EAAccessoryDidConnectNotification object:nil userInfo:userInfo];
     
 }
@@ -152,7 +185,7 @@ static NSThread *listenerThread;
     NSLog(@"name %@,manufacturer %@",[disconnectedAccessory name],[disconnectedAccessory manufacturer]);
     
     NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
-    NSDictionary *userInfo = @{ USB360EAAccessoryKey: [[notification userInfo] objectForKey:EAAccessoryKey], USB360EAAccessorySelectedKey: [[notification userInfo] objectForKey:EAAccessorySelectedKey]};
+    NSDictionary *userInfo = @{ USB360EAAccessoryKey: ((nil == [[notification userInfo] objectForKey:EAAccessoryKey]) ? @"USB360EAAccessoryKey" :[[notification userInfo] objectForKey:EAAccessoryKey]), USB360EAAccessorySelectedKey: ((nil == [[notification userInfo] objectForKey:EAAccessorySelectedKey])?@"EAAccessorySelectedKey":[[notification userInfo] objectForKey:EAAccessorySelectedKey])};
     [notificationCenter postNotificationName:USB360EAAccessoryDidDisconnectNotification object:nil userInfo:userInfo];
 }
 
@@ -223,6 +256,10 @@ int sendUSB360(void *pOint, unsigned char *pucBuffer, int iLen, int iTimeOut)
 
 -(NSString*)requestDeviceInfo
 {
+    if (nil == usbHandler) {
+        return @"Not Init USB Handler";
+    }
+    
     NSLog(@"%@",NSStringFromSelector(_cmd));
     
     int ret = 0;
@@ -231,7 +268,8 @@ int sendUSB360(void *pOint, unsigned char *pucBuffer, int iLen, int iTimeOut)
     char acFw[64]   = {0};
     
     ret = usb360_cmdsdk_sendGetDeviceInfo(usbHandler,acName,acSn,acFw);
-
+    NSLog(@"return value ret:%d usbHandler %p",ret,usbHandler);
+    
     NSString *deviceInfo = [NSString stringWithUTF8String:acName];
     NSString *snInfo = [NSString stringWithUTF8String:acSn];
     NSString *fwInfo = [NSString stringWithUTF8String:acFw];
@@ -242,6 +280,10 @@ int sendUSB360(void *pOint, unsigned char *pucBuffer, int iLen, int iTimeOut)
 
 -(NSString*)requestStreamInfo
 {
+    if (nil == usbHandler) {
+        return @"Not Init USB Handler";
+    }
+    
     NSLog(@"%@",NSStringFromSelector(_cmd));
 
     int ret = 0;
@@ -279,13 +321,13 @@ int sendUSB360(void *pOint, unsigned char *pucBuffer, int iLen, int iTimeOut)
 
 -(int)obtainStream
 {
+    if (nil == usbHandler) {
+        return USB360ErrorCodeNoInitUSBHander;
+    }
+    
     NSLog(@"%@",NSStringFromSelector(_cmd));
     
-    int returnValue = usb360_api_setStreamCallBack(usbHandler,streamCallBackUSB360,nil);
-    
-    if (returnValue != 0) {
-        NSLog(@"usb360_api_setStreamCallBack Error %d",returnValue);
-    }
+    int returnValue = [self startStreamingVideo];
     
 //    listenerThread = [[NSThread alloc] initWithTarget:self
 //                                             selector:@selector(listenerThread)
@@ -363,6 +405,8 @@ int sendUSB360(void *pOint, unsigned char *pucBuffer, int iLen, int iTimeOut)
 -(int)releaseStream
 {
     NSLog(@"%@",NSStringFromSelector(_cmd));
+    
+    [self startStreamingVideo];
     
     return true;
 

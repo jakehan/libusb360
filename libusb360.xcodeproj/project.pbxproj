@@ -313,6 +313,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/libusb360/USB360SDK",
 				);
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = company.com.ynapmoc.libusb360;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
