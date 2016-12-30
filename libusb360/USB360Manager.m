@@ -16,6 +16,12 @@
 #define EVERY_READ_LENGTH (1024) //每次从文件读取的长度
 
 
+
+NSString *const USB360EAAccessoryDidConnectNotification = @"USB360EAAccessoryDidConnectNotification";
+NSString *const USB360EAAccessoryDidDisconnectNotification = @"USB360EAAccessoryDidDisconnectNotification";
+NSString *const USB360EAAccessoryKey = @"USB360EAAccessoryKey"; // EAAccessory
+NSString *const USB360EAAccessorySelectedKey = @"USB360EAAccessorySelectedKey"; // EAAccessory
+
 @interface USB360Manager()
 {
     FILE *file;//pcm源文件
@@ -35,7 +41,6 @@
 
 @implementation USB360Manager
 
-static NSThread *listenerThread;
 
 + (USB360Manager *)sharedManager
 {
@@ -56,13 +61,7 @@ static NSThread *listenerThread;
     return sessionManager;
 }
 
-- (void)addObserverForAccessory
-{
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_accessoryDidConnect:) name:EAAccessoryDidConnectNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_accessoryDidDisconnect:) name:EAAccessoryDidDisconnectNotification object:nil];
-    
-    [[EAAccessoryManager sharedAccessoryManager] registerForLocalNotifications];
-}
+#pragma mark ****************** Interface functions ******************
 
 - (void)initEASession
 {
@@ -83,45 +82,7 @@ static NSThread *listenerThread;
     [self initSelectedAccessoryProtocol];
 }
 
-- (void)initSelectedAccessoryProtocol
-{
-    NSArray *protocolStrings = [_selectedAccessory protocolStrings];
-    NSLog(@"selectedAccessory protocolStrings %@ %@", protocolStrings,self.supportedProtocolsStrings);
 
-    for(NSString *protocolString in protocolStrings)
-    {
-        if (_selectedAccessory)
-        {
-            BOOL  matchFound = FALSE;
-            for ( NSString *item in self.supportedProtocolsStrings)
-            {
-                if ([item compare: protocolString] == NSOrderedSame)
-                {
-                    matchFound = TRUE;
-//                    NSLog(@"match found - protocolString %@", protocolString);
-//                    [_eaSessionController setupControllerForAccessory:_selectedAccessory withProtocolString:item];
-                    break;
-                }
-            }
-            
-            if (matchFound == FALSE)
-            {
-                NSLog(@"Not Found Match Protocol String\n");
-                _selectedAccessory = nil;
-            }
-            else
-            {
-                [_eaSessionController setupControllerForAccessory:_selectedAccessory
-                                               withProtocolString:protocolString];
-                
-                NSLog(@"Found Match Protocol String  %@\n", protocolString);
-                [_eaSessionController openSession];
-            }
-        }
-        
-        _selectedAccessory = nil;
-    }
-}
 
 
 - (void)initUSB360Handler
@@ -138,121 +99,28 @@ static NSThread *listenerThread;
             NSLog(@"usb360_api_addReceiveEndPoint Error %d",returnValue);
         }
         
-        returnValue = usb360_api_setStreamCallBack(usbHandler,streamCallBackUSB360,nil);
+        returnValue = usb360_api_setStreamCallBack(usbHandler,streamCallBackUSB360,(__bridge void *)(self).eaSessionController);
         if (returnValue != 0) {
             NSLog(@"usb360_api_setStreamCallBack Error %d",returnValue);
         }
     }
 }
 
-//- (int)sendCMDUSB360:(int)cmd content:(NSString *)cmdContent length:(int)cmdLen callback:(int*)callbackFunc parameter:(void*)param
-//{
-//    int returnValue = usb360_api_sendCmd(usbHandler, cmd, (unsigned char*)[cmdContent UTF8String], cmdLen,callbackFunc,param);
-//    
-//    return returnValue;
-//}
-
 - (int)destroyUSB360
 {
-    NSLog(@"%@",NSStringFromSelector(_cmd));
-    
     if (nil == usbHandler) {
-        NSLog(@"usbHandler already released\n");
+        return USB360ErrorCodeNoInitUSBHander;
     }
+    
+    NSLog(@"%@",NSStringFromSelector(_cmd));
+
     int iRet = usb360_api_destroy(usbHandler);
     NSLog(@"iRet %d\n",iRet);
 
     return iRet;
 }
 
-- (void)_accessoryDidConnect:(NSNotification *)notification {
-    NSLog(@"%@",NSStringFromSelector(_cmd));
-    EAAccessory *connectedAccessory = [[notification userInfo] objectForKey:EAAccessoryKey];
-    
-    NSLog(@"name %@,manufacturer %@",[connectedAccessory name],[connectedAccessory manufacturer]);
-    
-    NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
-    NSDictionary *userInfo = @{ USB360EAAccessoryKey: ((nil == [[notification userInfo] objectForKey:EAAccessoryKey]) ? @"USB360EAAccessoryKey" :[[notification userInfo] objectForKey:EAAccessoryKey]), USB360EAAccessorySelectedKey: ((nil == [[notification userInfo] objectForKey:EAAccessorySelectedKey])?@"EAAccessorySelectedKey":[[notification userInfo] objectForKey:EAAccessorySelectedKey])};
-    [notificationCenter postNotificationName:USB360EAAccessoryDidConnectNotification object:nil userInfo:userInfo];
-    
-}
 
-- (void)_accessoryDidDisconnect:(NSNotification *)notification {
-    NSLog(@"%@",NSStringFromSelector(_cmd));
-    
-    EAAccessory *disconnectedAccessory = [[notification userInfo] objectForKey:EAAccessoryKey];
-    
-    NSLog(@"name %@,manufacturer %@",[disconnectedAccessory name],[disconnectedAccessory manufacturer]);
-    
-    NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
-    NSDictionary *userInfo = @{ USB360EAAccessoryKey: ((nil == [[notification userInfo] objectForKey:EAAccessoryKey]) ? @"USB360EAAccessoryKey" :[[notification userInfo] objectForKey:EAAccessoryKey]), USB360EAAccessorySelectedKey: ((nil == [[notification userInfo] objectForKey:EAAccessorySelectedKey])?@"EAAccessorySelectedKey":[[notification userInfo] objectForKey:EAAccessorySelectedKey])};
-    [notificationCenter postNotificationName:USB360EAAccessoryDidDisconnectNotification object:nil userInfo:userInfo];
-}
-
-int streamCallBackUSB360(void *par, int iCh, unsigned char *pucData, int iDataLen, unsigned int uiPtsMs)
-{
-    printf("streamCallBackUSB360 called\n");
-    
-    return 0;
-}
-
-int receiveUSB360(void *pOint, unsigned char **pucBuffer, int iLen, int iTimeOut)
-{
-    NSLog(@"receiveUSB360\n");
-    EADSessionController *thiz = (__bridge EADSessionController *)pOint;
-    
-    if (NULL == *pucBuffer)
-    {
-        *pucBuffer = (unsigned char *)malloc(sizeof(iLen));
-        if (NULL == *pucBuffer) {
-            NSLog(@"Alloc Fail For pucBuffer\n");
-            
-            return -1;
-        }
-    }
-    
-    return [thiz readData:*pucBuffer Length:iLen timeout:iTimeOut];
-    
-//    return [thiz readData:*pucBuffer Length:iLen timeout:iTimeOut];
-}
-
-int sendUSB360(void *pOint, unsigned char *pucBuffer, int iLen, int iTimeOut)
-{
-    NSLog(@"sendUSB360\n");
-
-    EADSessionController *thiz = (__bridge EADSessionController *)pOint;
-    
-    if (NULL == pucBuffer)
-    {
-        return -1;
-    }
-    
-    NSData *data = [NSData dataWithBytes:pucBuffer length:iLen];
-    if (NULL == data) {
-        iTimeOut = -1;
-        return -1;
-    }
-    
-    return [thiz writeData:pucBuffer Length:iLen timeout:iTimeOut];
-}
-
-- (int)addReceivePoint
-{
-    int iRet = 0;
-    
-    iRet = usb360_api_addReceiveEndPoint(usbHandler, (__bridge void *)([EADSessionController sharedController]), receiveUSB360);
-    
-    return iRet;
-}
-
-- (int)addSendPoint
-{
-    int iRet = 0;
-    
-    iRet = usb360_api_addSendEndPoint(usbHandler, (__bridge void *)([EADSessionController sharedController]), sendUSB360);
-    
-    return iRet;
-}
 
 -(NSString*)requestDeviceInfo
 {
@@ -298,6 +166,10 @@ int sendUSB360(void *pOint, unsigned char *pucBuffer, int iLen, int iTimeOut)
 
 -(NSString*)getLensParam
 {
+    if (nil == usbHandler) {
+        return @"Not Init USB Handler";
+    }
+
     NSLog(@"%@",NSStringFromSelector(_cmd));
 
     return self.dataLength;
@@ -305,6 +177,10 @@ int sendUSB360(void *pOint, unsigned char *pucBuffer, int iLen, int iTimeOut)
 
 -(int)setLensParam:(NSString *)aLen
 {
+    if (nil == usbHandler) {
+        return USB360ErrorCodeNoInitUSBHander;
+    }
+
     NSLog(@"%@ %@",NSStringFromSelector(_cmd),aLen);
     
     int ret = 0;
@@ -329,91 +205,33 @@ int sendUSB360(void *pOint, unsigned char *pucBuffer, int iLen, int iTimeOut)
     
     int returnValue = [self startStreamingVideo];
     
-//    listenerThread = [[NSThread alloc] initWithTarget:self
-//                                             selector:@selector(listenerThread)
-//                                               object:nil];
-//    [listenerThread start];
-    
     return returnValue;
 }
 
-- (int)startStreamingVideo
-{
-    return usb360_cmdsdk_sendStreamStart(usbHandler);
-}
-
-- (int)stopStreamingVideo
-{
-    return usb360_cmdsdk_sendStreamStop(usbHandler);
-}
-
-- (void)listenerThread
-{ @autoreleasepool
-    {
-        NSLog(@"ListenerThread: Started");
-        
-        // We can't run the run loop unless it has an associated input source or a timer.
-        // So we'll just create a timer that will never fire - unless the server runs for a decades.
-        [NSTimer scheduledTimerWithTimeInterval:[[NSDate distantFuture] timeIntervalSinceNow]
-                                         target:self
-                                       selector:@selector(readOriginalData)
-                                       userInfo:nil
-                                        repeats:YES];
-        
-        NSLog(@"ListenerThread: Stopped");
-    }
-}
-
-- (void)readOriginalData
-{
-    while (1) {
-        int len = 1024;
-        unsigned char *stream = (unsigned char *)malloc(sizeof(len));
-        memset(stream, 0, len);
-        [self fillAudioBuffer:stream Length:len];
-        
-        [[NSRunLoop currentRunLoop] run];
-    }
-
-}
-
-- (void)fillAudioBuffer:(unsigned char *)stream Length:(int)len
-{
-    NSString *documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
-    documentsPath = [documentsPath stringByAppendingPathComponent:@"AP515_sw_wav_-6dBFS.wav"];
-    
-    file  = fopen([documentsPath UTF8String], "rb");
-    fseek(file, 0, SEEK_SET);
-    pcmDataBuffer = malloc(EVERY_READ_LENGTH);
-
-    size_t readLength = fread(pcmDataBuffer, 1, len, file);
-    
-    if (readLength == 0) {
-        NSLog(@"Read Audio Data Finished!");
-    }
-    
-    for(int i=0;i<readLength;i++)
-    {
-        stream[i] = pcmDataBuffer[i];
-    }
-    
-    [self onReadFrame:(__bridge void *)(self) channel:1 data:(char *)stream length:(int)readLength pts:0];
-}
-
-
-
 -(int)releaseStream
 {
+    if (nil == usbHandler) {
+        NSLog(@"USB360ErrorCodeNoInitUSBHander\n");
+        return USB360ErrorCodeNoInitUSBHander;
+    }
+    
     NSLog(@"%@",NSStringFromSelector(_cmd));
     
-    [self startStreamingVideo];
+    [self stopStreamingVideo];
+    
+    [_eaSessionController startWriteMP4];
     
     return true;
 
 }
 
+
 - (int)setExposureMode:(USB360ExposureModeType)mode parameter:(USB360CameraModeType)parameter
 {
+    if (nil == usbHandler) {
+        return USB360ErrorCodeNoInitUSBHander;
+    }
+    
     //parameter: [video/photo] 
     NSLog(@"%@",NSStringFromSelector(_cmd));
 
@@ -422,6 +240,10 @@ int sendUSB360(void *pOint, unsigned char *pucBuffer, int iLen, int iTimeOut)
 
 - (int)setWhiteBalanceMode:(USB360WhiteBalanceModeType)mode parameter:(USB360CameraModeType)parameter
 {
+    if (nil == usbHandler) {
+        return USB360ErrorCodeNoInitUSBHander;
+    }
+    
     NSLog(@"%@",NSStringFromSelector(_cmd));
     
     return true;
@@ -429,6 +251,10 @@ int sendUSB360(void *pOint, unsigned char *pucBuffer, int iLen, int iTimeOut)
 
 - (int)getCameraMode
 {
+    if (nil == usbHandler) {
+        return USB360ErrorCodeNoInitUSBHander;
+    }
+    
     NSLog(@"%@",NSStringFromSelector(_cmd));
 
     return 0;
@@ -436,6 +262,10 @@ int sendUSB360(void *pOint, unsigned char *pucBuffer, int iLen, int iTimeOut)
 
 - (int)getCameraElectricityPercent
 {
+    if (nil == usbHandler) {
+        return USB360ErrorCodeNoInitUSBHander;
+    }
+    
     NSLog(@"%@",NSStringFromSelector(_cmd));
     
     return 9;
@@ -443,6 +273,10 @@ int sendUSB360(void *pOint, unsigned char *pucBuffer, int iLen, int iTimeOut)
 
 - (int)requestFWUpgrate:(NSString*)fwFile
 {
+    if (nil == usbHandler) {
+        return USB360ErrorCodeNoInitUSBHander;
+    }
+    
     NSLog(@"%@",NSStringFromSelector(_cmd));
     NSLog(@"upgrate fw\n");
 
@@ -458,6 +292,10 @@ int sendUSB360(void *pOint, unsigned char *pucBuffer, int iLen, int iTimeOut)
 
 - (int)setTime
 {
+    if (nil == usbHandler) {
+        return USB360ErrorCodeNoInitUSBHander;
+    }
+    
     NSLog(@"%@",NSStringFromSelector(_cmd));
     int ret = 0;
     ret = usb360_cmdsdk_sendSetTime(usbHandler, NULL);
@@ -467,6 +305,10 @@ int sendUSB360(void *pOint, unsigned char *pucBuffer, int iLen, int iTimeOut)
 
 - (int)setCameraName:(NSString*)name
 {
+    if (nil == usbHandler) {
+        return USB360ErrorCodeNoInitUSBHander;
+    }
+    
     NSLog(@"%@",NSStringFromSelector(_cmd));
     
     NSLog(@"%@",name);
@@ -478,11 +320,19 @@ int sendUSB360(void *pOint, unsigned char *pucBuffer, int iLen, int iTimeOut)
 
 - (int)setCameraIQ:(int)iISO awb:(int)iAWB ev:(int)iEV st:(int)iST
 {
+    if (nil == usbHandler) {
+        return USB360ErrorCodeNoInitUSBHander;
+    }
+    
     return usb360_cmdsdk_sendSetIQ(usbHandler, iISO, iAWB, iEV, iST);
 }
 
 - (int)getCameraIO
 {
+    if (nil == usbHandler) {
+        return USB360ErrorCodeNoInitUSBHander;
+    }
+    
     int ret = 0;
     char acInfo[512] = {0};
     
@@ -495,6 +345,10 @@ int sendUSB360(void *pOint, unsigned char *pucBuffer, int iLen, int iTimeOut)
 
 - (int)setTimeOfAutoPowerOff:(int)time
 {
+    if (nil == usbHandler) {
+        return USB360ErrorCodeNoInitUSBHander;
+    }
+    
     NSLog(@"%@",NSStringFromSelector(_cmd));
     
     NSLog(@"%d",time);
@@ -504,24 +358,124 @@ int sendUSB360(void *pOint, unsigned char *pucBuffer, int iLen, int iTimeOut)
 
 - (int)requestCameraPowerOff
 {
+    if (nil == usbHandler) {
+        return USB360ErrorCodeNoInitUSBHander;
+    }
+    
     NSLog(@"%@",NSStringFromSelector(_cmd));
     
     return 0;
 }
 
--(int)destroy
-{
-    NSLog(@"%@",NSStringFromSelector(_cmd));
+#pragma mark ****************** Utility functions ******************
 
-    return usb360_api_destroy(usbHandler);
+- (void)_accessoryDidConnect:(NSNotification *)notification {
+    NSLog(@"%@",NSStringFromSelector(_cmd));
+    EAAccessory *connectedAccessory = [[notification userInfo] objectForKey:EAAccessoryKey];
+    
+    NSLog(@"name %@,manufacturer %@",[connectedAccessory name],[connectedAccessory manufacturer]);
+    
+    NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
+    NSDictionary *userInfo = @{ USB360EAAccessoryKey: ((nil == [[notification userInfo] objectForKey:EAAccessoryKey]) ? @"USB360EAAccessoryKey1" :[[notification userInfo] objectForKey:EAAccessoryKey]), USB360EAAccessorySelectedKey: ((nil == [[notification userInfo] objectForKey:EAAccessorySelectedKey])?@"EAAccessorySelectedKey1":[[notification userInfo] objectForKey:EAAccessorySelectedKey])};
+    [notificationCenter postNotificationName:USB360EAAccessoryDidConnectNotification object:nil userInfo:userInfo];
+    
 }
+
+- (void)_accessoryDidDisconnect:(NSNotification *)notification {
+    NSLog(@"%@",NSStringFromSelector(_cmd));
+    
+    EAAccessory *disconnectedAccessory = [[notification userInfo] objectForKey:EAAccessoryKey];
+    
+    NSLog(@"name %@,manufacturer %@",[disconnectedAccessory name],[disconnectedAccessory manufacturer]);
+    
+    NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
+    NSDictionary *userInfo = @{ USB360EAAccessoryKey: ((nil == [[notification userInfo] objectForKey:EAAccessoryKey]) ? @"USB360EAAccessoryKey1" :[[notification userInfo] objectForKey:EAAccessoryKey]), USB360EAAccessorySelectedKey: ((nil == [[notification userInfo] objectForKey:EAAccessorySelectedKey])?@"EAAccessorySelectedKey1":[[notification userInfo] objectForKey:EAAccessorySelectedKey])};
+    [notificationCenter postNotificationName:USB360EAAccessoryDidDisconnectNotification object:nil userInfo:userInfo];
+}
+
+- (void)addObserverForAccessory
+{
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_accessoryDidConnect:) name:EAAccessoryDidConnectNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_accessoryDidDisconnect:) name:EAAccessoryDidDisconnectNotification object:nil];
+    
+    [[EAAccessoryManager sharedAccessoryManager] registerForLocalNotifications];
+}
+
+- (int)startStreamingVideo
+{
+    return usb360_cmdsdk_sendStreamStart(usbHandler);
+}
+
+- (int)stopStreamingVideo
+{
+    return usb360_cmdsdk_sendStreamStop(usbHandler);
+}
+
+- (int)addReceivePoint
+{
+    int iRet = 0;
+    
+    iRet = usb360_api_addReceiveEndPoint(usbHandler, (__bridge void *)([EADSessionController sharedController]), receiveUSB360);
+    
+    return iRet;
+}
+
+- (int)addSendPoint
+{
+    int iRet = 0;
+    
+    iRet = usb360_api_addSendEndPoint(usbHandler, (__bridge void *)([EADSessionController sharedController]), sendUSB360);
+    
+    return iRet;
+}
+
+
+- (void)initSelectedAccessoryProtocol
+{
+    NSArray *protocolStrings = [_selectedAccessory protocolStrings];
+    NSLog(@"selectedAccessory protocolStrings %@ %@", protocolStrings,self.supportedProtocolsStrings);
+    
+    for(NSString *protocolString in protocolStrings)
+    {
+        if (_selectedAccessory)
+        {
+            BOOL  matchFound = FALSE;
+            for ( NSString *item in self.supportedProtocolsStrings)
+            {
+                if ([item compare: protocolString] == NSOrderedSame)
+                {
+                    matchFound = TRUE;
+                    //                    NSLog(@"match found - protocolString %@", protocolString);
+                    //                    [_eaSessionController setupControllerForAccessory:_selectedAccessory withProtocolString:item];
+                    break;
+                }
+            }
+            
+            if (matchFound == FALSE)
+            {
+                NSLog(@"Not Found Match Protocol String\n");
+                _selectedAccessory = nil;
+            }
+            else
+            {
+                [_eaSessionController setupControllerForAccessory:_selectedAccessory
+                                               withProtocolString:protocolString];
+                
+                NSLog(@"Found Match Protocol String  %@\n", protocolString);
+                [_eaSessionController openSession];
+            }
+        }
+        
+        _selectedAccessory = nil;
+    }
+}
+
+#pragma mark ****************** callback functions ******************
 
 - (void)receiveFrame:(int)channel data:(char*)data length:(int)lenght pts:(long)pts
 {
     NSLog(@"%@",NSStringFromSelector(_cmd));
 }
-
-#pragma callback functions
 
 -(void)onReadFrame:(void*)par channel:(int)channel data:(char*)data length:(int)lenght pts:(long)ptsMS
 {
@@ -530,6 +484,57 @@ int sendUSB360(void *pOint, unsigned char *pucBuffer, int iLen, int iTimeOut)
     [[(__bridge USB360Manager*)par delegate] receiveFrame:channel data:data length:lenght pts:ptsMS];
 }
 
+int streamCallBackUSB360(void *par, int iCh, unsigned char *pucData, int iDataLen, unsigned int uiPtsMs)
+{
+    EADSessionController *thiz = (__bridge EADSessionController *)par;
+    [thiz writeMp4:iCh data:pucData len:iDataLen pts:uiPtsMs];
+    
+    printf("streamCallBackUSB360 called iCh %d, iDataLen %d pts %d\n",iCh,iDataLen,uiPtsMs);
+    
+    return 0;
+}
+
+int receiveUSB360(void *pOint, unsigned char **pucBuffer, int iLen, int iTimeOut)
+{
+//    NSLog(@"receiveUSB360\n");
+    EADSessionController *thiz = (__bridge EADSessionController *)pOint;
+    
+    if (NULL == *pucBuffer)
+    {
+//        NSLog(@"Alloc For pucBuffer\n");
+
+        *pucBuffer = (unsigned char *)malloc(iLen);
+        memset(*pucBuffer, 0, iLen);
+        
+        if (NULL == *pucBuffer) {
+            NSLog(@"Alloc Fail For pucBuffer\n");
+            
+            return -1;
+        }
+    }
+    
+    return [thiz readData:pucBuffer Length:iLen timeout:iTimeOut];
+}
+
+int sendUSB360(void *pOint, unsigned char *pucBuffer, int iLen, int iTimeOut)
+{
+    NSLog(@"sendUSB360\n");
+    
+    EADSessionController *thiz = (__bridge EADSessionController *)pOint;
+    
+    if (NULL == pucBuffer)
+    {
+        return -1;
+    }
+    
+    NSData *data = [NSData dataWithBytes:pucBuffer length:iLen];
+    if (NULL == data) {
+        iTimeOut = -1;
+        return -1;
+    }
+    
+    return [thiz writeData:pucBuffer Length:iLen timeout:iTimeOut];
+}
 
 
 @end

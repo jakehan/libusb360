@@ -13,6 +13,7 @@ extern NSString *EADSessionDataReceivedNotification;
 
 // NOTE: EADSessionController is not threadsafe, calling methods from different threads will lead to unpredictable results
 @interface EADSessionController : NSObject <EAAccessoryDelegate, NSStreamDelegate>
+@property (nonatomic, strong) NSMutableData *mp4Data;
 
 + (EADSessionController *)sharedController;
 
@@ -20,12 +21,14 @@ extern NSString *EADSessionDataReceivedNotification;
 
 - (BOOL)openSession;
 - (void)closeSession;
+- (void)writeMp4:(int)dataType data:(unsigned char*)data len:(int)length pts:(int)pts;
+- (void)startWriteMP4;
 
 - (void)writeData:(NSData *)data;
 
 - (NSUInteger)readBytesAvailable;
 - (NSData *)readData:(NSUInteger)bytesToRead;
-- (int)readData:(unsigned char*)pucBuffer Length:(int)aLen timeout:(int)iTimeoutMs;
+- (int)readData:(unsigned char**)pucBuffer Length:(int)aLen timeout:(int)iTimeoutMs;
 - (int)writeData:(unsigned char*)pucBuffer Length:(int)aLen timeout:(int)iTimeoutMs;
 
 @property (nonatomic, readonly) EAAccessory *accessory;

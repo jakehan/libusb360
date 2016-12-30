@@ -87,10 +87,10 @@
 				5DC82EA81DF7A9E200D34ADA /* USB360SDK */,
 				5DF25F281DD050B600439915 /* EADSessionController.h */,
 				5DF25F291DD050B600439915 /* EADSessionController.m */,
-				5DF250941DCB019200EFDC44 /* libusb360.h */,
-				5DF250951DCB019200EFDC44 /* Info.plist */,
 				5DF2509C1DCB0EE700EFDC44 /* USB360Manager.h */,
 				5DF2509D1DCB0EE700EFDC44 /* USB360Manager.m */,
+				5DF250941DCB019200EFDC44 /* libusb360.h */,
+				5DF250951DCB019200EFDC44 /* Info.plist */,
 			);
 			path = libusb360;
 			sourceTree = "<group>";

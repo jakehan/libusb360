@@ -8,10 +8,10 @@
 
 #import <Foundation/Foundation.h>
 
-NSString *const USB360EAAccessoryDidConnectNotification = @"USB360EAAccessoryDidConnectNotification";
-NSString *const USB360EAAccessoryDidDisconnectNotification = @"USB360EAAccessoryDidDisconnectNotification";
-NSString *const USB360EAAccessoryKey = @"USB360EAAccessoryKey"; // EAAccessory
-NSString *const USB360EAAccessorySelectedKey = @"USB360EAAccessorySelectedKey"; // EAAccessory
+extern NSString *const USB360EAAccessoryDidConnectNotification;
+extern NSString *const USB360EAAccessoryDidDisconnectNotification;
+extern NSString *const USB360EAAccessoryKey; // EAAccessory
+extern NSString *const USB360EAAccessorySelectedKey; // EAAccessory
 
 typedef enum {
     USB360ErrorCodeNoInitUSBHander = 1,
@@ -74,8 +74,6 @@ typedef enum {
 
 //「0:OK，其他:Fail」
 - (int)requestCameraPowerOff;
-
--(int)destroy;
 
 //get video/audio stream delegate function
 - (void)receiveFrame:(int)channel data:(char*)data length:(int)lenght pts:(long)pts;
